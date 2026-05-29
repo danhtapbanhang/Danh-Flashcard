@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)file:///Users/danhvo/Downloads/gemini-code-1780031045814.html -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Danh's Flashcard — iOS Style</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: #f2f2f7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            color: #000000;
+            padding: 25px 20px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 440px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 4px;
+        }
+
+        h1.brand-title {
+            color: #000000;
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-add-trigger {
+            background: none;
+            border: none;
+            color: #007aff;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .segmented-control {
+            display: flex;
+            background-color: #e3e3e9;
+            padding: 2px;
+            border-radius: 9px;
+            margin-bottom: 18px;
+        }
+
+        .segment-btn {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 6px 0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #000000;
+            cursor: pointer;
+            border-radius: 7px;
+            transition: all 0.2s ease;
+        }
+
+        .segment-btn.is-active {
+            background-color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 1px rgba(0, 0, 0, 0.06);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            background: #ffffff;
+            padding: 12px 20px;
+            border-radius: 14px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #3a3a3c;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .score-board span { font-weight: 600; }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e5e5ea;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 4px;
+            width: 0%;
+            background-color: #007aff;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .flashcard-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            height: 340px;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.15, 0.85, 0.35, 1.05);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            background-color: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .card-front { color: #000000; }
+        .word { font-size: 2.2rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 10px; text-align: center; }
+        .ipa { font-size: 1.05rem; color: #8e8e93; font-weight: 400; text-align: center; }
+
+        .card-back {
+            color: #000000;
+            transform: rotateY(180deg);
+            align-items: flex-start;
+            text-align: left;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+
+        .back-section { margin-bottom: 14px; width: 100%; }
+        .back-section:last-child { margin-bottom: 0; }
+        .back-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #8e8e93; font-weight: 600; margin-bottom: 3px; }
+        .definition-en { font-size: 1.05rem; font-weight: 400; line-height: 1.35; color: #1c1c1e; }
+        .meaning-vi { font-size: 1.15rem; font-weight: 600; color: #007aff; }
+        .example-box { font-size: 0.95rem; color: #3a3a3c; line-height: 1.35; background-color: #f2f2f7; padding: 10px 14px; border-radius: 12px; }
+
+        .empty-state-text { font-size: 1.1rem; color: #8e8e93; text-align: center; line-height: 1.5; padding: 20px; }
+
+        .action-buttons { display: flex; gap: 12px; margin-bottom: 25px; }
+        .btn-status {
+            flex: 1; padding: 14px; border: none; border-radius: 14px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-wrong { background-color: #ffe5e5; color: #ff3b30; }
+        .btn-correct { background-color: #e5f9e7; color: #34c759; }
+
+        .nav-buttons { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .btn-nav { background: none; border: none; color: #007aff; font-size: 0.95rem; font-weight: 500; cursor: pointer; padding: 8px 4px; }
+        .btn-shuffle { background-color: #e5e5ea; color: #3a3a3c; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+
+        button:active { transform: scale(0.98); }
+        button:disabled { color: #aeaeb2 !important; cursor: not-allowed; }
+        .hint { color: #8e8e93; font-size: 0.8rem; text-align: center; margin-top: 15px; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.4);
+            display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 1000;
+        }
+        .modal-overlay.is-visible { opacity: 1; pointer-events: auto; }
+        .modal-sheet {
+            width: 100%; max-width: 500px; background-color: #f2f2f7; border-top-left-radius: 20px; border-top-right-radius: 20px;
+            padding: 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.15, 0.85, 0.35, 1); box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+        }
+        .modal-overlay.is-visible .modal-sheet { transform: translateY(0); }
+        .modal-handle { width: 36px; height: 5px; background-color: #c7c7cc; border-radius: 3px; margin: 0 auto 15px auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 1.15rem; font-weight: 600; color: #000; }
+        .btn-modal-action { background: none; border: none; font-size: 1rem; font-weight: 500; cursor: pointer; color: #007aff; }
+        .btn-modal-action.btn-cancel { color: #ff3b30; }
+        .btn-modal-action.btn-save { font-weight: 600; }
+
+        .input-group { background-color: #ffffff; border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
+        .input-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea; }
+        .input-row:last-child { border-bottom: none; }
+        .input-row label { width: 110px; font-size: 0.95rem; color: #3a3a3c; }
+        .input-row input { flex: 1; border: none; outline: none; font-size: 0.95rem; color: #000000; background: transparent; }
+        .input-row input::placeholder { color: #c7c7cc; }
+
+        @media (min-width: 600px) {
+            .modal-overlay { align-items: center; padding: 20px; }
+            .modal-sheet { border-radius: 20px; transform: scale(0.9); }
+            .modal-overlay.is-visible .modal-sheet { transform: scale(1); }
+            .modal-handle { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="header-area">
+            <h1 class="brand-title">Danh's Flashcard</h1>
+            <button class="btn-add-trigger" onclick="openModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Thêm từ
+            </button>
+        </div>
+        
+        <div class="segmented-control">
+            <button class="segment-btn is-active" id="seg-default" onclick="switchCategory(&#39;default&#39;)">Từ trung cấp (100)</button>
+            <button class="segment-btn" id="seg-custom" onclick="switchCategory(&#39;custom&#39;)">Kho từ vựng</button>
+        </div>
+        
+        <div class="score-board">
+            <div>Đã thuộc: <span id="correct-count" style="color: #34c759;">0</span></div>
+            <div>Tiến độ: <span id="card-index">1/100</span></div>
+            <div>Chưa thuộc: <span id="wrong-count" style="color: #ff3b30;">0</span></div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar" style="width: 1%;"></div>
+        </div>
+
+        <div class="flashcard-wrapper" onclick="flipCard()">
+            <div class="flashcard" id="flashcard" style="pointer-events: auto;">
+                <div class="card-face card-front" id="card-front-view"><div class="word" id="lbl-word">Abandon</div><div class="ipa" id="lbl-ipa">/əˈbæn.dən/</div></div>
+                <div class="card-face card-back" id="card-back-view">
+                    <div class="back-section"><div class="back-title">Definition</div><div class="definition-en" id="lbl-def-en">To leave a place, thing, or person forever.</div></div>
+                    <div class="back-section"><div class="back-title">Nghĩa tiếng Việt</div><div class="meaning-vi" id="lbl-mean-vi">Từ bỏ, bỏ rơi</div></div>
+                    <div class="back-section" style="width: 100%;"><div class="back-title">Example</div><div class="example-box" id="lbl-example">The occupants had to abandon the building due to the fire.</div></div></div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-status btn-wrong" id="btn-mark-wrong" onclick="markCard(false)">Chưa thuộc</button>
+            <button class="btn-status btn-correct" id="btn-mark-correct" onclick="markCard(true)">Đã thuộc</button>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="btn-nav" id="btn-prev" onclick="prevCard()" disabled="">Quay lại</button>
+            <button class="btn-nav btn-shuffle" id="btn-shuffle" onclick="shuffleCards()">Trộn thẻ</button>
+            <button class="btn-nav" id="btn-next" onclick="nextCard()">Tiếp theo</button>
+        </div>
+
+        <div class="hint" id="lbl-hint" style="opacity: 1;">Chạm vào thẻ để lật</div>
+    </div>
+
+    <!-- MODAL THEME -->
+    <div class="modal-overlay" id="modal-add-word" onclick="closeModalViaOverlay(event)">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <button class="btn-modal-action btn-cancel" onclick="closeModal()">Hủy</button>
+                <div class="modal-title">Từ mới</div>
+                <button class="btn-modal-action btn-save" onclick="saveNewWord()">Xong</button>
+            </div>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>Từ vựng</label>
+                    <input type="text" id="txt-word" placeholder="Ví dụ: Brilliant">
+                </div>
+                <div class="input-row">
+                    <label>Phiên âm IPA</label>
+                    <input type="text" id="txt-ipa" placeholder="Ví dụ: /ˈbrɪl.jənt/">
+                </div>
+                <div class="input-row">
+                    <label>Định nghĩa (EN)</label>
+                    <input type="text" id="txt-def-en" placeholder="Ví dụ: Extremely clever or talented.">
+                </div>
+                <div class="input-row">
+                    <label>Nghĩa (VI)</label>
+                    <input type="text" id="txt-mean-vi" placeholder="Ví dụ: Lỗi lạc, thông minh">
+                </div>
+                <div class="input-row">
+                    <label>Ví dụ thực tế</label>
+                    <input type="text" id="txt-example" placeholder="Ví dụ: He gave a brilliant performance.">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATA 100 TỪ VỰNG TRUNG CẤP (B1-B2 CHUẨN ĐẸP)
+        const database = {
+            default: [
+                { word: "Abandon", ipa: "/əˈbæn.dən/", defEn: "To leave a place, thing, or person forever.", meanVi: "Từ bỏ, bỏ rơi", example: "The occupants had to abandon the building due to the fire." },
+                { word: "Abstract", ipa: "/ˈæb.strækt/", defEn: "Existing as an idea, feeling, or quality, not as a material object.", meanVi: "Trừu tượng", example: "Truth and beauty are abstract concepts." },
+                { word: "Academic", ipa: "/ˌæk.əˈdem.ɪk/", defEn: "Relating to schools, colleges, and universities.", meanVi: "Thuộc học thuật, học viện", example: "The school is known for its high academic standards." },
+                { word: "Accelerate", ipa: "/əkˈsel.ə.reɪt/", defEn: "To happen or make something happen faster than expected.", meanVi: "Tăng tốc, thúc đẩy nhanh", example: "They use radiation to accelerate the growth of the plants." },
+                { word: "Accompany", ipa: "/əˈkʌm.pə.ni/", defEn: "To go with someone or to be provided or exist at the same time as something.", meanVi: "Đi cùng, đồng hành, hộ tống", example: "The course books are accompanied by four audio CDs." },
+                { word: "Accumulate", ipa: "/əˈkjuː.mjə.leɪt/", defEn: "To collect a large number of things over a period of time.", meanVi: "Tích lũy, gom góp", example: "We've accumulated a lot of junk over the years." },
+                { word: "Accurate", ipa: "/ˈæk.jɚ.ət/", defEn: "Correct, exact, and without any mistakes.", meanVi: "Chính xác", example: "The test gives accurate results within minutes." },
+                { word: "Achieve", ipa: "/əˈtʃiːv/", defEn: "To succeed in finishing something or reaching an aim, especially after a lot of work.", meanVi: "Đạt được, giành được", example: "She finally achieved her ambition to become a pilot." },
+                { word: "Acknowledge", ipa: "/əkˈnɑː.lɪdʒ/", defEn: "To accept, admit, or recognize something, or the truth or existence of something.", meanVi: "Thừa nhận, công nhận", example: "He acknowledged that he had made a big mistake." },
+                { word: "Acquire", ipa: "/əˈkwaɪɚ/", defEn: "To get or buy something, or to learn something through effort.", meanVi: "Thu được, tiếp thu (kiến thức)", example: "She has acquired a good knowledge of English." },
+                { word: "Adapt", ipa: "/əˈdæpt/", defEn: "To change, or to change something, to suit different conditions or situations.", meanVi: "Thích nghi, điều chỉnh lại", example: "It took him a while to adapt to his new school." },
+                { word: "Adequate", ipa: "/ˈæd.ə.kwət/", defEn: "Enough or satisfactory for a particular purpose.", meanVi: "Đủ, đầy đủ (đáp ứng yêu cầu)", example: "The room was small but adequate for my needs." },
+                { word: "Adjacent", ipa: "/əˈdʒeɪ.sənt/", defEn: "Very near, next to, or touching.", meanVi: "Kế cận, ngay cạnh bên", example: "They work in adjacent buildings." },
+                { word: "Adjust", ipa: "/əˈdʒʌst/", defEn: "To change something slightly, especially to make it more correct, effective, or suitable.", meanVi: "Điều chỉnh, sửa lại cho khít", example: "You can adjust the height of the chair easily." },
+                { word: "Advocate", ipa: "/ˈæd.və.keɪt/", defEn: "To publicly support or suggest an idea, development, or way of doing something.", meanVi: "Ủng hộ, tán thành công khai", example: "He advocates reducing military spending." },
+                { word: "Affect", ipa: "/əˈfekt/", defEn: "To have an influence on someone or something, or to cause a change in someone or something.", meanVi: "Ảnh hưởng đến", example: "The divorce affected every aspect of her life." },
+                { word: "Aggregate", ipa: "/ˈæɡ.rə.ɡət/", defEn: "Something formed by adding together several amounts or things.", meanVi: "Tổng hợp, tập hợp lại", example: "The aggregate wealth of the country's richest individuals is mind-boggling." },
+                { word: "Albeit", ipa: "/ɑːlˈbiː.ɪt/", defEn: "Although; even though.", meanVi: "Mặc dù, dẫu cho", example: "He tried to explain, albeit with little success." },
+                { word: "Allocate", ipa: "/ˈæl.ə.keɪt/", defEn: "To give something officially to a person or system for a particular purpose.", meanVi: "Phân bổ, cấp phát", example: "The government allocated £10 million for health education." },
+                { word: "Alter", ipa: "/ˈɑːl.tɚ/", defEn: "To change something, usually slightly, or to cause the characteristics of something to change.", meanVi: "Thay đổi, biến đổi", example: "We've had to alter some of our plans." },
+                { word: "Alternative", ipa: "/ɑːlˈtɝː.nə.t̬ɪv/", defEn: "Something that is different from something else, offering a choice.", meanVi: "Giải pháp thay thế, lựa chọn khác", example: "Do you have an alternative suggestion?" },
+                { word: "Ambiguous", ipa: "/æmˈbɪɡ.ju.əs/", defEn: "Having or expressing more than one possible meaning, sometimes intentionally.", meanVi: "Mơ hồ, nhập nhằng", example: "His reply to my question was somewhat ambiguous." },
+                { word: "Amend", ipa: "/əˈmend/", defEn: "To change the words of a text, especially a law or a legal document.", meanVi: "Sửa đổi, cải thiện (văn bản, luật)", example: "The contract was amended to include the new terms." },
+                { word: "Analogy", ipa: "/əˈnæl.ə.dʒi/", defEn: "A comparison between things that have similar features, often used to help explain a principle.", meanVi: "Sự tương tự, phép loại suy", example: "He drew an analogy between the human heart and a pump." },
+                { word: "Analyze", ipa: "/ˈæn.əl.aɪz/", defEn: "To study something in a systematic and careful way.", meanVi: "Phân tích", example: "The scientists are analyzing the blood samples." },
+                { word: "Annual", ipa: "/ˈæn.ju.əl/", defEn: "Happening or done once a year.", meanVi: "Hàng năm", example: "We are preparing for the annual company meeting." },
+                { word: "Anticipate", ipa: "/ænˈtɪs.ə.peɪt/", defEn: "To imagine or expect that something will happen.", meanVi: "Dự đoán, lường trước", example: "We don't anticipate any major problems with the new system." },
+                { word: "Apparent", ipa: "/əˈpær.ənt/", defEn: "Able to be seen or understood clearly.", meanVi: "Rõ ràng, hiển nhiên", example: "It was apparent to everyone that he was lying." },
+                { word: "Append", ipa: "/əˈpend/", defEn: "To add something to the end of a piece of writing.", meanVi: "Đính kèm, thêm vào cuối", example: "The author appended a list of references to the end of the book." },
+                { word: "Appreciate", ipa: "/əˈpriː.ʃi.eɪt/", defEn: "To recognize how good someone or something is and to be grateful for them.", meanVi: "Trân trọng, cảm kích, đánh giá cao", example: "I really appreciate your help with this project." },
+                { word: "Approach", ipa: "/əˈproʊtʃ/", defEn: "To come near or nearer to something or someone in space, time, quality, or amount.", meanVi: "Tiếp cận, đến gần", example: "The total amount is approaching £5 million." },
+                { word: "Appropriate", ipa: "/əˈproʊ.pri.ət/", defEn: "Suitable or right for a particular situation or occasion.", meanVi: "Thích hợp, phù hợp", example: "Is this movie appropriate for young children?" },
+                { word: "Approximate", ipa: "/əˈprɑːk.sə.mət/", defEn: "Not completely accurate but close to the correct number, time, or amount.", meanVi: "Xấp xỉ, gần đúng", example: "What is the approximate cost of the repairs?" },
+                { word: "Arbitrary", ipa: "/ˈɑːr.bə.trer.i/", defEn: "Based on chance rather than being planned or based on reason.", meanVi: "Tùy ý, độc đoán, ngẫu nhiên", example: "The choice of players seemed completely arbitrary." },
+                { word: "Aspect", ipa: "/ˈæs.pekt/", defEn: "One part of a situation, problem, subject, or thing.", meanVi: "Khía cạnh, diện mạo", example: "Which aspect of the job do you enjoy most?" },
+                { word: "Assemble", ipa: "/əˈsem.bəl/", defEn: "To come together in a single place or bring parts together in a single group.", meanVi: "Lắp ráp, tập hợp lại", example: "The children assembled in the main hall." },
+                { word: "Assess", ipa: "/əˈses/", defEn: "To judge or decide the amount, value, quality, or importance of something.", meanVi: "Đánh giá, ước định", example: "Insurers are still assessing the damage caused by the flood." },
+                { word: "Assign", ipa: "/əˈsaɪn/", defEn: "To give a particular job or piece of work to someone.", meanVi: "Phân công, giao việc", example: "The teacher assigned a different task to each student." },
+                { word: "Assist", ipa: "/əˈsɪst/", defEn: "To help someone, typically by doing a share of the work.", meanVi: "Hỗ trợ, trợ giúp", example: "The company will assist you with moving costs." },
+                { word: "Assume", ipa: "/əˈsuːm/", defEn: "To accept something to be true without question or proof.", meanVi: "Giả định, cho là", example: "Let us assume that the plan succeeds." },
+                { word: "Assure", ipa: "/əˈʃʊr/", defEn: "To tell someone confidently that something is true so that they do not worry.", meanVi: "Cam đoan, bảo đảm", example: "I can assure you that the data is completely safe." },
+                { word: "Attach", ipa: "/əˈtætʃ/", defEn: "To fasten, join, or connect something to something else.", meanVi: "Gắn vào, đính kèm", example: "Please attach a recent photograph to your application form." },
+                { word: "Attain", ipa: "/əˈteɪn/", defEn: "To reach or succeed in getting something, especially after a lot of effort.", meanVi: "Đạt được thành tựu, chạm tới", example: "He attained the rank of professor at a young age." },
+                { word: "Attitude", ipa: "/ˈæt̬.ə.tuːd/", defEn: "A feeling or opinion about something or someone, or a way of behaving.", meanVi: "Thái độ", example: "She has a very positive attitude towards her work." },
+                { word: "Attribute", ipa: "/əˈtrɪb.juːt/", defEn: "To say or think that something is the result of something else.", meanVi: "Quy cho là, đổ tại cho", example: "He attributes his success to hard work and good luck." },
+                { word: "Author", ipa: "/ˈɑː.θɚ/", defEn: "The writer of a book, article, play, or formal document.", meanVi: "Tác giả", example: "She is the author of two best-selling novels." },
+                { word: "Authority", ipa: "/əˈθɔːr.ə.t̬i/", defEn: "The moral or legal right or ability to control, command, or make decisions.", meanVi: "Thẩm quyền, quyền lực", example: "The police have the authority to arrest suspects." },
+                { word: "Automate", ipa: "/ˈɑː.t̬ə.meɪt/", defEn: "To change a factory, office, or process so that machines do the work.", meanVi: "Tự động hóa", example: "The company is trying to automate its production line." },
+                { word: "Available", ipa: "/əˈveɪ.lə.bəl/", defEn: "Able to be bought, used, or reached.", meanVi: "Sẵn có, rảnh rỗi", example: "Is this model available in other colors?" },
+                { word: "Aware", ipa: "/əˈwer/", defEn: "Knowing or realizing something.", meanVi: "Nhận thức được, biết về", example: "I was not aware of the changes to the schedule." },
+                { word: "Behalf", ipa: "/bɪˈhæf/", defEn: "In the interest of or as a representative of someone.", meanVi: "Thay mặt, nhân danh", example: "On behalf of the company, I want to thank you all." },
+                { word: "Benefit", ipa: "/ˈben.ə.fɪt/", defEn: "An advantage or profit gained from something.", meanVi: "Lợi ích, phúc lợi", example: "The new system will bring significant benefits to our clients." },
+                { word: "Bias", ipa: "/ˈbaɪ.əs/", defEn: "The action of supporting or opposing a particular person or thing in an unfair way.", meanVi: "Sự thành kiến, thiên vị", example: "The judge was accused of showing bias against the defendant." },
+                { word: "Bond", ipa: "/bɑːnd/", defEn: "A close connection joining two or more people.", meanVi: "Mối liên kết, giao kèo", example: "There is a very close bond between the twin sisters." },
+                { word: "Brief", ipa: "/briːf/", defEn: "Lasting only a short time or using only a few words.", meanVi: "Ngắn gọn, vắn tắt", example: "She gave a brief description of the suspect." },
+                { word: "Bulk", ipa: "/bʌlk/", defEn: "Large size or mass, or the majority of something.", meanVi: "Phần lớn, số lượng lớn", example: "The bulk of the work has already been completed." },
+                { word: "Capable", ipa: "/ˈkeɪ.pə.bəl/", defEn: "Having the ability, power, or qualities to be able to do something.", meanVi: "Có khả năng, năng lực", example: "She is highly capable of managing the entire department." },
+                { word: "Capacity", ipa: "/kəˈpæs.ə.t̬i/", defEn: "The total amount that can be contained or produced.", meanVi: "Sức chứa, công suất", example: "The stadium has a seating capacity of 50,000." },
+                { word: "Category", ipa: "/ˈkæt̬.ə.ɡɔːr.i/", defEn: "A type, or a group of things having some features that are the same.", meanVi: "Danh mục, thể loại", example: "The books are divided into different categories." },
+                { word: "Cease", ipa: "/siːs/", defEn: "To stop something from happening or existing.", meanVi: "Ngừng, chấm dứt", example: "The company decided to cease operations in that country." },
+                { word: "Challenge", ipa: "/ˈtʃæl.ɪndʒ/", defEn: "Something that needs great mental or physical effort in order to be done successfully.", meanVi: "Thử thách, thách thức", example: "Finding a solution to this problem will be a major challenge." },
+                { word: "Channel", ipa: "/ˈtʃæn.əl/", defEn: "A way of communicating, or a route through which things can flow.", meanVi: "Kênh (truyền thông, dòng chảy)", example: "You should go through the official channels to lodge a complaint." },
+                { word: "Chapter", ipa: "/ˈtʃæp.tɚ/", defEn: "A distinct period of history or a main division of a book.", meanVi: "Chương (sách, cuộc đời)", example: "This event marked the beginning of a new chapter in his life." },
+                { word: "Chart", ipa: "/tʃɑːrt/", defEn: "A drawing that shows information in a simple way, often using lines and bars.", meanVi: "Biểu đồ, đồ thị", example: "The chart shows the company's sales figures for the past year." },
+                { word: "Chemical", ipa: "/ˈkem.ɪ.kəl/", defEn: "A substance of distinct molecular composition used in or produced by chemistry.", meanVi: "Hóa chất, thuộc hóa học", example: "The factory was fined for dumping chemicals into the river." },
+                { word: "Circumstance", ipa: "/ˈsɝː.kəm.stæns/", defEn: "A fact or condition connected with or relevant to an event or action.", meanVi: "Hoàn cảnh, tình huống", example: "Under no circumstances should you open that door." },
+                { word: "Cite", ipa: "/saɪt/", defEn: "To mention something as proof for a theory or as a reason why something happened.", meanVi: "Trích dẫn", example: "The lawyer cited several previous cases to support his argument." },
+                { word: "Civil", ipa: "/ˈsɪv.əl/", defEn: "Relating to ordinary citizens and their concerns, as distinct from military or ecclesiastical.", meanVi: "Thuộc dân sự, dân dụng", example: "They got married in a civil ceremony at the town hall." },
+                { word: "Clarify", ipa: "/ˈklær.ə.faɪ/", defEn: "To make something clear or easier to understand by giving more details.", meanVi: "Làm rõ, làm cho sáng tỏ", example: "Could you clarify what you meant by that statement?" },
+                { word: "Classic", ipa: "/ˈklæs.ɪk/", defEn: "Having a high quality or standard against which other things are judged.", meanVi: "Kinh điển, cổ điển xuất sắc", example: "The movie is a classic example of American cinema." },
+                { word: "Clause", ipa: "/klɑːz/", defEn: "A particular part of a legal document, or a group of words in grammar.", meanVi: "Điều khoản (luật), mệnh đề (ngữ pháp)", example: "There is a special clause in the contract regarding termination." },
+                { word: "Code", ipa: "/koʊd/", defEn: "A system of words, letters, figures, or symbols used to represent others.", meanVi: "Mã số, mật mã, bộ quy tắc", example: "All employees must follow the company's dress code." },
+                { word: "Coherent", ipa: "/koʊˈhɪr.ənt/", defEn: "Logical and consistent; easy to understand.", meanVi: "Mạch lạc, chặt chẽ", example: "He was too excited to give a coherent account of what had happened." },
+                { word: "Coincide", ipa: "/ˌkoʊ.ɪnˈsaɪd/", defEn: "To happen at or near the same time.", meanVi: "Trùng hợp, xảy ra cùng lúc", example: "The publication of the book coincided with the author's birthday." },
+                { word: "Collapse", ipa: "/kəˈlæps/", defEn: "To fall down suddenly because of pressure or having no strength or support.", meanVi: "Sụp đổ, đổ sập", example: "The roof of the building collapsed during the earthquake." },
+                { word: "Colleague", ipa: "/ˈkɑː.liːɡ/", defEn: "A person with whom one works in a profession or business.", meanVi: "Đồng nghiệp", example: "We are having a farewell party for a colleague today." },
+                { word: "Combine", ipa: "/kəmˈbaɪn/", defEn: "To join or bring together two or more things to form a single entity.", meanVi: "Kết hợp, phối hợp", example: "The two companies decided to combine their resources." },
+                { word: "Comment", ipa: "/ˈkɑː.ment/", defEn: "A verbal or written remark expressing an opinion or reaction.", meanVi: "Bình luận, nhận xét", example: "The minister refused to comment on the rumors." },
+                { word: "Commission", ipa: "/kəˈmɪʃ.ən/", defEn: "An instruction, command, or role given to a person or group.", meanVi: "Ủy ban, hội đồng, tiền hoa hồng", example: "The government has set up a commission to investigate the matter." },
+                { word: "Commit", ipa: "/kəˈmɪt/", defEn: "To pledge or bind a person or an organization to a certain course of action.", meanVi: "Cam kết, tận tụy, phạm phải (sai lầm)", example: "They are willing to commit themselves to the long-term project." },
+                { word: "Commodity", ipa: "/kəˈmɑː.də.t̬i/", defEn: "A raw material or primary agricultural product that can be bought and sold.", meanVi: "Hàng hóa, nhu yếu phẩm", example: "Crude oil is the world's most important commodity." },
+                { word: "Communicate", ipa: "/kəˈmjuː.nə.keɪt/", defEn: "To share or exchange information, news, or ideas.", meanVi: "Giao tiếp, truyền đạt", example: "They communicate with each other mostly by email." },
+                { word: "Community", ipa: "/kəˈmjuː.nə.t̬i/", defEn: "A group of people living in the same place or having a particular characteristic in common.", meanVi: "Cộng đồng", example: "The local community raised money to repair the church." },
+                { word: "Compatible", ipa: "/kəmˈpæt̬.ə.bəl/", defEn: "Able to exist or occur together without conflict or problems.", meanVi: "Tương thích, hợp nhau", example: "The new software is compatible with older operating systems." },
+                { word: "Compensate", ipa: "/ˈkɑːm.pən.seɪt/", defEn: "To give someone something, typically money, in recognition of loss, suffering, or injury.", meanVi: "Đền bù, bồi thường", example: "The company compensated the workers for their extra hours." },
+                { word: "Compile", ipa: "/kəmˈpaɪl/", defEn: "To produce something by assembling information collected from other sources.", meanVi: "Biên soạn, gom tụ dữ liệu", example: "We are compiling a list of all our regular customers." },
+                { word: "Complement", ipa: "/ˈkɑːm.plə.ment/", defEn: "A thing that contributes extra features to something else in a way that improves it.", meanVi: "Phần bổ sung, tương hỗ cho nhau", example: "The red wine is a perfect complement to the steak." },
+                { word: "Complex", ipa: "/kəmˈpleks/", defEn: "Consisting of many different and connected parts; complicated.", meanVi: "Phức tạp, khu phức hợp", example: "The issue is extremely complex and requires careful study." },
+                { word: "Component", ipa: "/kəmˈpoʊ.nənt/", defEn: "A part or element of a larger whole, especially a part of a machine or vehicle.", meanVi: "Thành phần cấu tạo, linh kiện", example: "Trust is a vital component of any successful relationship." },
+                { word: "Compound", ipa: "/ˈkɑːm.paʊnd/", defEn: "A thing that is composed of two or more separate elements; a mixture.", meanVi: "Hợp chất, từ ghép", example: "Water is a chemical compound of hydrogen and oxygen." },
+                { word: "Comprehensive", ipa: "/ˌkɑːm.priˈhen.sɪv/", defEn: "Complete and including everything that is necessary.", meanVi: "Toàn diện, bao hàm đầy đủ", example: "The book offers a comprehensive guide to learning English." },
+                { word: "Comprise", ipa: "/kəmˈpraɪz/", defEn: "To consist of or be made up of certain elements or parts.", meanVi: "Bao gồm, gồm có", example: "The committee comprises ten independent members." },
+                { word: "Compute", ipa: "/kəmˈpjuːt/", defEn: "To calculate an answer or amount using mathematical processes.", meanVi: "Tính toán (bằng máy móc)", example: "The final scores are computed automatically by the computer." },
+                { word: "Conceive", ipa: "/kənˈsiːv/", defEn: "To imagine something or form an idea or plan in your mind.", meanVi: "Hình thành ý tưởng, nghén ra suy nghĩ", example: "It is difficult to conceive of a world without internet." },
+                { word: "Concentrate", ipa: "/ˈkɑːn.sən.treɪt/", defEn: "To direct all your effort or attention towards a particular activity.", meanVi: "Tập trung", example: "I need to concentrate on my studies right now." },
+                { word: "Concept", ipa: "/ˈkɑːn.sept/", defEn: "An abstract idea or a general notion.", meanVi: "Khái niệm, ý tưởng cốt lõi", example: "He introduced a completely new concept in web design." },
+                { word: "Conclude", ipa: "/kənˈkluːd/", defEn: "To judge or decide something after thinking carefully about all the information.", meanVi: "Kết luận, đúc kết", example: "The report concluded that the project was a success." },
+                { word: "Concurrent", ipa: "/kənˈkɝː.ənt/", defEn: "Happening or existing at the same time.", meanVi: "Đồng thời, song hành", example: "The criminal was given three concurrent prison sentences." },
+                { word: "Conduct", ipa: "/kənˈdʌkt/", defEn: "To organize and perform a particular activity.", meanVi: "Tiến hành, thực hiện (cuộc khảo sát/nghiên cứu)", example: "We are conducting a survey to find out what customers want." },
+                { word: "Confer", ipa: "/kənˈfɝː/", defEn: "To exchange ideas on a particular subject, often in order to reach a decision.", meanVi: "Bàn bạc, thảo luận, hội ý", example: "The doctors need to confer before making a final decision." }
+            ],
+            custom: []
+        };
+
+        let currentCategory = 'default';
+        let flashcards = [...database[currentCategory]];
+        
+        let currentIndex = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+
+        const cardElement = document.getElementById('flashcard');
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'correct') {
+                osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(780, audioCtx.currentTime + 0.06);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+            } else if (type === 'wrong') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        function switchCategory(catName) {
+            if (currentCategory === catName) return;
+            playSound('click');
+            
+            currentCategory = catName;
+            
+            document.getElementById('seg-default').classList.toggle('is-active', catName === 'default');
+            document.getElementById('seg-custom').classList.toggle('is-active', catName === 'custom');
+            
+            flashcards = [...database[currentCategory]];
+            resetGame();
+        }
+
+        function updateCard() {
+            cardElement.classList.remove('is-flipped');
+            
+            if (flashcards.length === 0) {
+                document.getElementById('card-front-view').innerHTML = `<div class="empty-state-text">Kho từ vựng của bạn đang trống.<br>Hãy bấm nút <b>"Thêm từ"</b> ở góc trên để tạo nhé! 🚀</div>`;
+                document.getElementById('card-back-view').innerHTML = `<div class="empty-state-text">Chưa có dữ liệu mặt sau.</div>`;
+                document.getElementById('card-index').innerText = "0/0";
+                document.getElementById('progress-bar').style.width = `0%`;
+                setControlsDisabled(true);
+                return;
+            }
+
+            setControlsDisabled(false);
+
+            setTimeout(() => {
+                const currentData = flashcards[currentIndex];
+                
+                document.getElementById('card-front-view').innerHTML = `<div class="word" id="lbl-word"></div><div class="ipa" id="lbl-ipa"></div>`;
+                document.getElementById('card-back-view').innerHTML = `
+                    <div class="back-section"><div class="back-title">Definition</div><div class="definition-en" id="lbl-def-en"></div></div>
+                    <div class="back-section"><div class="back-title">Nghĩa tiếng Việt</div><div class="meaning-vi" id="lbl-mean-vi"></div></div>
+                    <div class="back-section" style="width: 100%;"><div class="back-title">Example</div><div class="example-box" id="lbl-example"></div></div>`;
+
+                document.getElementById('lbl-word').innerText = currentData.word;
+                document.getElementById('lbl-ipa').innerText = currentData.ipa;
+                document.getElementById('lbl-def-en').innerText = currentData.defEn;
+                document.getElementById('lbl-mean-vi').innerText = currentData.meanVi;
+                document.getElementById('lbl-example').innerText = currentData.example;
+                
+                document.getElementById('card-index').innerText = `${currentIndex + 1}/${flashcards.length}`;
+                document.getElementById('btn-prev').disabled = currentIndex === 0;
+                document.getElementById('btn-next').disabled = currentIndex === flashcards.length - 1;
+                
+                const progressPercentage = ((currentIndex + 1) / flashcards.length) * 100;
+                document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            }, 150);
+        }
+
+        function setControlsDisabled(disabled) {
+            document.getElementById('btn-mark-wrong').disabled = disabled;
+            document.getElementById('btn-mark-correct').disabled = disabled;
+            document.getElementById('btn-prev').disabled = disabled;
+            document.getElementById('btn-next').disabled = disabled;
+            document.getElementById('btn-shuffle').disabled = disabled;
+            document.getElementById('flashcard').style.pointerEvents = disabled ? 'none' : 'auto';
+            document.getElementById('lbl-hint').style.opacity = disabled ? '0' : '1';
+        }
+
+        function flipCard() {
+            if (flashcards.length === 0) return;
+            playSound('click');
+            cardElement.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < flashcards.length - 1) {
+                playSound('click'); currentIndex++; updateCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                playSound('click'); currentIndex--; updateCard();
+            }
+        }
+
+        // Tự động cuộn mượt nội dung mặt sau về đầu trang khi chuyển thẻ
+        document.getElementById('card-back-view').scrollTop = 0;
+
+        function markCard(isCorrect) {
+            if (flashcards.length === 0) return;
+            if (isCorrect) {
+                playSound('correct'); correctCount++;
+                document.getElementById('correct-count').innerText = correctCount;
+            } else {
+                playSound('wrong'); wrongCount++;
+                document.getElementById('wrong-count').innerText = wrongCount;
+            }
+
+            if (currentIndex < flashcards.length - 1) {
+                setTimeout(() => { currentIndex++; updateCard(); }, 300);
+            } else {
+                setTimeout(() => {
+                    alert(`Vòng học kết thúc!\nThuộc bài: ${correctCount}\nCần ôn lại: ${wrongCount}`);
+                    resetGame();
+                }, 400);
+            }
+        }
+
+        function resetGame() {
+            currentIndex = 0; correctCount = 0; wrongCount = 0;
+            document.getElementById('correct-count').innerText = 0;
+            document.getElementById('wrong-count').innerText = 0;
+            updateCard();
+        }
+
+        function shuffleCards() {
+            if (flashcards.length === 0) return;
+            playSound('click');
+            for (let i = flashcards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [flashcards[i], flashcards[j]] = [flashcards[j], flashcards[i]];
+            }
+            resetGame();
+        }
+
+        function openModal() { playSound('click'); document.getElementById('modal-add-word').classList.add('is-visible'); }
+        function closeModal() { playSound('click'); document.getElementById('modal-add-word').classList.remove('is-visible'); clearInputs(); }
+        function closeModalViaOverlay(e) { if (e.target.classList.contains('modal-overlay')) closeModal(); }
+        function clearInputs() {
+            document.getElementById('txt-word').value = ''; document.getElementById('txt-ipa').value = '';
+            document.getElementById('txt-def-en').value = ''; document.getElementById('txt-mean-vi').value = '';
+            document.getElementById('txt-example').value = '';
+        }
+
+        function saveNewWord() {
+            const word = document.getElementById('txt-word').value.trim();
+            const ipa = document.getElementById('txt-ipa').value.trim();
+            const defEn = document.getElementById('txt-def-en').value.trim();
+            const meanVi = document.getElementById('txt-mean-vi').value.trim();
+            const example = document.getElementById('txt-example').value.trim();
+
+            if (!word || !meanVi) {
+                alert("Vui lòng điền ít nhất phần Từ vựng và Nghĩa tiếng Việt.");
+                return;
+            }
+
+            database.custom.push({
+                word: word,
+                ipa: ipa || "/.../",
+                defEn: defEn || "(No english definition provided)",
+                meanVi: meanVi,
+                example: example || "No example sentence provided."
+            });
+
+            playSound('correct');
+            closeModal();
+            
+            switchCategory('custom');
+            currentIndex = flashcards.length - 1;
+            updateCard();
+        }
+
+        updateCard();
+    </script>
+
+</body></html>
